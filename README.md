@@ -143,7 +143,7 @@ resource "aws_route_table_association" "mo_routeTableAssociation" {
   tags = {
     Name = "WordPress Server"
   }
-}</code></pre>
+</code></pre>
 
 <h3><strong>Applying the Configuration</strong></h3>
 <p>Run <code>terraform apply</code> to create the resources defined in the configuration files. Confirm the action by typing <code>yes</code> when prompted.</p>
