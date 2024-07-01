@@ -8,7 +8,7 @@
   🌟 <strong>Terraform AWS WordPress Setup</strong> 🌟
   <br>
 </h1>
-<h4 align="center">A comprehensive guide to setting up a WordPress server on AWS using Terraform.</h4>
+<h4 align="center">A guide to setting up a WordPress server on AWS using Terraform!.</h4>
 <p align="center">
   <a href="https://www.terraform.io">
     <img src="https://img.shields.io/badge/Terraform-v1.0.0-blue" alt="Terraform Version">
