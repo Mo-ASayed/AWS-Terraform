@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 
@@ -8,7 +13,7 @@
   🌟 <strong>Terraform AWS WordPress Setup</strong> 🌟
   <br>
 </h1>
-<h4 align="center">A guide to setting up a WordPress server on AWS using Terraform!.</h4>
+<h4 align="center">A guide to setting up a WordPress server on AWS using Terraform!</h4>
 <p align="center">
   <a href="https://www.terraform.io">
     <img src="https://img.shields.io/badge/Terraform-v1.0.0-blue" alt="Terraform Version">
@@ -56,49 +61,41 @@
 <p>Configure the AWS CLI with your credentials by running:</p>
 <pre><code>aws configure</code></pre>
 <p>Provide your AWS Access Key ID, Secret Access Key, region, and output format.</p>
-<h4><strong>Initialise a Terraform Project</strong></h4>
+<h4><strong>Initialse a Terraform Project</strong></h4>
 <p>Create a directory for your Terraform project and navigate into it. Run:</p>
 <pre><code>terraform init</code></pre>
 <p>to initialise the project.</p>
 
 <h2 id="creating-aws-infrastructure-with-terraform"><strong>Creating AWS Infrastructure with Terraform 🌐</strong></h2>
-<h3><strong>Provider Configuration</strong></h3>
-<p>Configure the AWS provider with the specified region:</p>
+<h3><strong>Create the <code>main.tf</code> File</strong></h3>
+<p>Create a file named <code>main.tf</code> in your project directory and add the following configuration:  (PLEASE NOTE - The details for the configuration are based on your own requirements. Please check and name them as you require before completing the configuration.) </p>
 <pre><code class="hcl">provider "aws" {
-  region = "us-east-1" #This can be any location you want
-}</code></pre>
+  region = "us-east-1" # This can be any location you want
+}
 
-<h3><strong>Create a VPC</strong></h3>
-<p>Create a Virtual Private Cloud (VPC) with a specified CIDR block:</p>
-<pre><code class="hcl">resource "aws_vpc" "mo_customVPC" {
+resource "aws_vpc" "mo_customVPC" {
   cidr_block = "10.0.0.0/16"
   tags = {
     Name = "mo_CustomVPC"
   }
-}</code></pre>
+}
 
-<h3><strong>Create a Subnet</strong></h3>
-<p>Create a subnet within the VPC:</p>
-<pre><code class="hcl">resource "aws_subnet" "mo_wordpressSubnet" {
+resource "aws_subnet" "mo_wordpressSubnet" {
   vpc_id     = aws_vpc.mo_customVPC.id
   cidr_block = "10.0.1.0/24"
   tags = {
     Name = "mo_wordpressSubnet"
   }
-}</code></pre>
+}
 
-<h3><strong>Create an Internet Gateway</strong></h3>
-<p>Create an Internet Gateway for internet access:</p>
-<pre><code class="hcl">resource "aws_internet_gateway" "mo_InternetGateway" {
+resource "aws_internet_gateway" "mo_InternetGateway" {
   vpc_id = aws_vpc.mo_customVPC.id
   tags = {
     Name = "mo_InternetGateway"
   }
-}</code></pre>
+}
 
-<h3><strong>Create a Route Table</strong></h3>
-<p>Create a route table to direct internet traffic from the subnet to the Internet Gateway:</p>
-<pre><code class="hcl">resource "aws_route_table" "mo_routeTable" {
+resource "aws_route_table" "mo_routeTable" {
   vpc_id = aws_vpc.mo_customVPC.id
   route {
     cidr_block = "0.0.0.0/0"
@@ -112,14 +109,12 @@
 resource "aws_route_table_association" "mo_routeTableAssociation" {
   subnet_id      = aws_subnet.mo_wordpressSubnet.id
   route_table_id = aws_route_table.mo_routeTable.id
-}</code></pre>
+}
 
-<h3><strong>Launch an EC2 Instance</strong></h3>
-<p>Follow the steps below to launch an EC2 instance and run a script to set up a WordPress server:</p>
-<pre><code class="hcl">resource "aws_instance" "wordpress" {
+resource "aws_instance" "wordpress" {
   ami           = "ami-0eaf7c3456e7b5b68"  # This is based on your selected region. for example: us-east-1
   instance_type = "t2.micro"
-  subnet_id     = "subnet-07359f796bd0b9ed8"  # mo_wordpressSubnet 
+  subnet_id     = aws_subnet.mo_wordpressSubnet.id
   security_groups = ["sg-0c7f3e0b123456789"]  # Replace with your actual security group ID
 
   user_data = <<-EOF
@@ -143,9 +138,10 @@ resource "aws_route_table_association" "mo_routeTableAssociation" {
   tags = {
     Name = "WordPress Server"
   }
+}
 </code></pre>
 
-<h3><strong>Applying the Configuration</strong></h3>
+<h3><strong>Apply the Terraform Configuration</strong></h3>
 <p>Run <code>terraform apply</code> to create the resources defined in the configuration files. Confirm the action by typing <code>yes</code> when prompted.</p>
 
 <h2 id="accessing-wordpress"><strong>Accessing WordPress 🌐</strong></h2>
