@@ -25,14 +25,6 @@
     <img src="https://img.shields.io/badge/AWS-Provider-brightgreen" alt="AWS Provider">
   </a>
 </p>
-<p align="center">
-  <a href="#what-is-terraform"><strong>What is Terraform? 🤔</strong></a> •
-  <a href="#why-use-terraform"><strong>Why Use Terraform? 🚀</strong></a> •
-  <a href="#setting-up-terraform"><strong>Setting Up Terraform ⚙️</strong></a> •
-  <a href="#creating-aws-infrastructure-with-terraform"><strong>Creating AWS Infrastructure with Terraform 🌐</strong></a> •
-  <a href="#accessing-wordpress"><strong>Accessing WordPress 🌐</strong></a> •
-  <a href="#additional-resources"><strong>Additional Resources 📚</strong></a>
-</p>
 
 <h2 id="what-is-terraform"><strong>What is Terraform? 🤔</strong></h2>
 <p><strong>Terraform</strong> is an Infrastructure as Code (IaC) tool that allows you to define and provision infrastructure resources like virtual machines, networks, and containers using configuration files. These files describe the desired state of your infrastructure, and Terraform automatically manages and provisions the necessary resources to match that state. This approach simplifies and automates the provisioning and management of cloud infrastructure, providing a consistent workflow to deploy and update infrastructure across various cloud providers like AWS, Azure, Google Cloud, and more, as well as on-premises environments.</p>
@@ -61,14 +53,14 @@
 <p>Configure the AWS CLI with your credentials by running:</p>
 <pre><code>aws configure</code></pre>
 <p>Provide your AWS Access Key ID, Secret Access Key, region, and output format.</p>
-<h4><strong>Initialse a Terraform Project</strong></h4>
+<h4><strong>Initialise a Terraform Project</strong></h4>
 <p>Create a directory for your Terraform project and navigate into it. Run:</p>
 <pre><code>terraform init</code></pre>
 <p>to initialise the project.</p>
 
 <h2 id="creating-aws-infrastructure-with-terraform"><strong>Creating AWS Infrastructure with Terraform 🌐</strong></h2>
 <h3><strong>Create the <code>main.tf</code> File</strong></h3>
-<p>Create a file named <code>main.tf</code> in your project directory and add the following configuration:  (PLEASE NOTE - The details for the configuration are based on your own requirements. Please check and name them as you require before completing the configuration.) </p>
+<p>Create a file named <code>main.tf</code> in your project directory and add the following configuration:</p>
 <pre><code class="hcl">provider "aws" {
   region = "us-east-1" # This can be any location you want
 }
@@ -143,6 +135,123 @@ resource "aws_instance" "wordpress" {
 
 <h3><strong>Apply the Terraform Configuration</strong></h3>
 <p>Run <code>terraform apply</code> to create the resources defined in the configuration files. Confirm the action by typing <code>yes</code> when prompted.</p>
+
+<h2 id="setting-up-nginx"><strong>Setting Up Nginx</strong></h2>
+<h3><strong>Install Nginx</strong></h3>
+<p>Use the package manager to install Nginx.</p>
+<pre><code>sudo apt update
+sudo apt install nginx
+</code></pre>
+
+<h3><strong>Start and Enable Nginx</strong></h3>
+<p>After installing Nginx, start and enable it to ensure it runs automatically on system boot.</p>
+<pre><code>sudo systemctl start nginx
+sudo systemctl enable nginx
+</code></pre>
+
+<h3><strong>Configure Nginx</strong></h3>
+<p>Adjust the default server block configuration to point to your WordPress directory.</p>
+<ul>
+  <li>Open the default Nginx configuration file for editing:</li>
+</ul>
+<pre><code>sudo nano /etc/nginx/sites-available/default
+</code></pre>
+
+<p>Update the <code>root</code> directive to point to your WordPress directory:</p>
+<pre><code>server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    root /var/www/html/wordpress;  # Adjust path as needed
+
+    index index.php index.html index.htm;
+
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ /index.php?$args;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;  # Adjust PHP version if necessary
+    }
+}
+</code></pre>
+
+<h3><strong>Test Nginx Configuration</strong></h3>
+<p>Check if the configuration file syntax is correct.</p>
+<pre><code>sudo nginx -t
+</code></pre>
+
+<p>If the test is successful, reload Nginx to apply the changes.</p>
+<pre><code>sudo systemctl reload nginx
+</code></pre>
+
+<h2 id="setting-up-mariadb"><strong>Setting Up MariaDB</strong></h2>
+<h3><strong>Installation</strong></h3>
+<p>Use the package manager to install MariaDB.</p>
+<pre><code>sudo apt install mariadb-server
+</code></pre>
+
+<h3><strong>Start and Enable MariaDB</strong></h3>
+<p>After installation, start and enable MariaDB to run on system boot.</p>
+<pre><code>sudo systemctl start mariadb
+sudo systemctl enable mariadb
+</code></pre>
+
+<h3><strong>Secure Installation</strong></h3>
+<p>Run the MySQL secure installation script to set a root password and improve security.</p>
+<pre><code>sudo mysql_secure_installation
+</code></pre>
+
+<p>Follow the prompts to set up the root password and secure MariaDB.</p>
+
+<h3><strong>Create Database and User for WordPress</strong></h3>
+<p>Log in to MySQL with the root account.</p>
+<pre><code>sudo mysql -u root -p
+</code></pre>
+
+<p>Enter the root password when prompted.</p>
+<p>Execute the following SQL commands to create a database and user for WordPress. Replace <code>wordpress</code>, <code>wordpressuser</code>, and <code>password</code> with your preferred database name, username, and password.</p>
+<pre><code>CREATE DATABASE wordpress;
+CREATE USER 'wordpressuser'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpressuser'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+</code></pre>
+
+<h2 id="setting-up-wordpress"><strong>Setting Up WordPress</strong></h2>
+<h3><strong>Installation</strong></h3>
+<p>Download and extract the latest WordPress package into your web directory.</p>
+<pre><code>cd /tmp
+wget https://wordpress.org/latest.tar.gz
+tar -zxvf latest.tar.gz
+sudo mv wordpress /var/www/html/
+</code></pre>
+
+<h3><strong>Set Permissions</strong></h3>
+<p>Adjust permissions for WordPress to function correctly.</p>
+<pre><code>sudo chown -R www-data:www-data /var/www/html/wordpress
+sudo chmod -R 755 /var/www/html/wordpress
+</code></pre>
+
+<h3><strong>Configuration</strong></h3>
+<p>Navigate to your WordPress directory and rename the sample configuration file.</p>
+<pre><code>cd /var/www/html/wordpress
+cp wp-config-sample.php wp-config.php
+nano wp-config.php
+</code></pre>
+
+<p>Update the database details (<code>DB_NAME</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_HOST</code>) with the values you set in MariaDB.</p>
+<pre><code>define( 'DB_NAME', 'wordpress' );
+define( 'DB_USER', 'wordpressuser' );
+define( 'DB_PASSWORD', 'password' );
+define( 'DB_HOST', 'localhost' );
+</code></pre>
+
+<h3><strong>Complete WordPress Installation</strong></h3>
+<p>Open a web browser and navigate to your server's IP address or domain name. Follow the WordPress installation prompts to set up your site.</p>
 
 <h2 id="accessing-wordpress"><strong>Accessing WordPress 🌐</strong></h2>
 <h4><strong>Allocate and Associate an Elastic IP</strong></h4>
