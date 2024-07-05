@@ -235,7 +235,7 @@ sudo mv wordpress /var/www/html/
 </p>
 <pre><code>sudo chown -R www-data:www-data /var/www/html/wordpress
 sudo chmod -R 755 /var/www/html/wordpress
-sudo find /var/www/html/wordpress -type f -exec chmod 644 {} \;
+*sudo find /var/www/html/wordpress -type f -exec chmod 644 {} \;
 </code></pre>
 
 <h3><strong>Configuration</strong></h3>
