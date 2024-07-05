@@ -231,9 +231,11 @@ sudo mv wordpress /var/www/html/
 </code></pre>
 
 <h3><strong>Set Permissions</strong></h3>
-<p>Adjust permissions for WordPress to function correctly.</p>
+<p>Adjust permissions for WordPress to function correctly. *We set the file permissions to 644, This is because we need the wordpress files to be readable by the web server.
+</p>
 <pre><code>sudo chown -R www-data:www-data /var/www/html/wordpress
 sudo chmod -R 755 /var/www/html/wordpress
+sudo find /var/www/html/wordpress -type f -exec chmod 644 {} \;
 </code></pre>
 
 <h3><strong>Configuration</strong></h3>
