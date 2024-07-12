@@ -60,18 +60,32 @@
 
 <h2 id="creating-aws-infrastructure-with-terraform"><strong>Creating AWS Infrastructure with Terraform 🌐</strong></h2>
 <h3><strong>Create the <code>main.tf</code> File</strong></h3>
-<p>Create a file named <code>main.tf</code> in your project directory and add the following configuration:</p>
-<pre><code class="hcl">provider "aws" {
-  region = "us-east-1" # This can be any location you want
+<p>First, create a file named <code>main.tf</code> in your project directory. This file will contain all the Terraform configuration needed to set up your AWS infrastructure. Let's break down what each part of the file does and why we're including it.</p>
+Provider Configuration
+html
+Copy code
+<pre><code class="hcl">
+provider "aws" {
+  region = "us-east-1" # This can be any AWS region you want
 }
-
+</code></pre>
+<p>This block specifies the provider we are using, which is AWS in this case. The <code>region</code> attribute sets the AWS region where our resources will be created. You can change this to your preferred region.</p>
+Creating a VPC (Virtual Private Cloud)
+html
+Copy code
+<pre><code class="hcl">
 resource "aws_vpc" "mo_customVPC" {
   cidr_block = "10.0.0.0/16"
   tags = {
     Name = "mo_CustomVPC"
   }
 }
-
+</code></pre>
+<p>A VPC is a virtual network in AWS that you can use to launch your resources in a logically isolated section. The <code>cidr_block</code> attribute defines the IP address range for the VPC. Here, we are using <code>10.0.0.0/16</code> which allows for a range of IP addresses within the VPC.</p>
+Creating a Subnet
+html
+Copy code
+<pre><code class="hcl">
 resource "aws_subnet" "mo_wordpressSubnet" {
   vpc_id     = aws_vpc.mo_customVPC.id
   cidr_block = "10.0.1.0/24"
@@ -79,14 +93,24 @@ resource "aws_subnet" "mo_wordpressSubnet" {
     Name = "mo_wordpressSubnet"
   }
 }
-
+</code></pre>
+<p>A subnet is a range of IP addresses in your VPC. In this block, we create a subnet within our VPC with the <code>cidr_block</code> of <code>10.0.1.0/24</code>. This subnet will be used to host our WordPress instance.</p>
+Creating an Internet Gateway
+html
+Copy code
+<pre><code class="hcl">
 resource "aws_internet_gateway" "mo_InternetGateway" {
   vpc_id = aws_vpc.mo_customVPC.id
   tags = {
     Name = "mo_InternetGateway"
   }
 }
-
+</code></pre>
+<p>An Internet Gateway is a horizontally scaled, redundant, and highly available VPC component that allows communication between your VPC and the internet. Here, we attach the internet gateway to our VPC.</p>
+Creating a Route Table and Association
+html
+Copy code
+<pre><code class="hcl">
 resource "aws_route_table" "mo_routeTable" {
   vpc_id = aws_vpc.mo_customVPC.id
   route {
@@ -102,9 +126,14 @@ resource "aws_route_table_association" "mo_routeTableAssociation" {
   subnet_id      = aws_subnet.mo_wordpressSubnet.id
   route_table_id = aws_route_table.mo_routeTable.id
 }
-
+</code></pre>
+<p>The route table contains a set of rules, called routes, that are used to determine where network traffic from your subnet or gateway is directed. We create a route table and associate it with our subnet to route traffic to the internet through the internet gateway.</p>
+Creating an EC2 Instance
+html
+Copy code
+<pre><code class="hcl">
 resource "aws_instance" "wordpress" {
-  ami           = "ami-0eaf7c3456e7b5b68"  # This is based on your selected region. for example: us-east-1
+  ami           = "ami-0eaf7c3456e7b5b68"  # This is based on your selected region. For example: us-east-1
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.mo_wordpressSubnet.id
   security_groups = ["sg-0c7f3e0b123456789"]  # Replace with your actual security group ID
@@ -132,17 +161,12 @@ resource "aws_instance" "wordpress" {
   }
 }
 </code></pre>
-
-<h3><strong>Apply the Terraform Configuration</strong></h3>
-<p>Run <code>terraform apply</code> to create the resources defined in the configuration files. Confirm the action by typing <code>yes</code> when prompted.</p>
-
-<h2 id="setting-up-nginx"><strong>Setting Up Nginx</strong></h2>
-<h3><strong>Install Nginx</strong></h3>
-<p>Use the package manager to install Nginx.</p>
-<pre><code>sudo apt update
-sudo apt install nginx
-</code></pre>
-
+<p>An EC2 instance is a virtual server in AWS. Here, we define an instance with a specified Amazon Machine Image (AMI) and instance type. The <code>user_data</code> script contains commands that will run when the instance starts, setting up a LAMP stack (Linux, Apache, MySQL, PHP) and installing WordPress.</p>
+<p><strong>Note:</strong> Replace the security group ID with your actual security group ID.</p>
+Applying the Terraform Configuration
+<p>After setting up your <code>main.tf</code> file, run the following command to create the resources defined in the configuration file:</p>
+<pre><code>terraform apply</code></pre>
+<p>Confirm the action by typing <code>yes</code> when prompted.</p>
 <h3><strong>Start and Enable Nginx</strong></h3>
 <p>After installing Nginx, start and enable it to ensure it runs automatically on system boot.</p>
 <pre><code>sudo systemctl start nginx
@@ -189,97 +213,75 @@ sudo systemctl enable nginx
 </code></pre>
 
 <h2 id="setting-up-mariadb"><strong>Setting Up MariaDB</strong></h2>
-<h3><strong>Installation</strong></h3>
+<h3><strong>Install MariaDB</strong></h3>
 <p>Use the package manager to install MariaDB.</p>
-<pre><code>sudo apt install mariadb-server
+<pre><code>sudo apt update
+sudo apt install mariadb-server
 </code></pre>
 
 <h3><strong>Start and Enable MariaDB</strong></h3>
-<p>After installation, start and enable MariaDB to run on system boot.</p>
+<p>Start and enable MariaDB to ensure it runs automatically on system boot.</p>
 <pre><code>sudo systemctl start mariadb
 sudo systemctl enable mariadb
 </code></pre>
 
-<h3><strong>Secure Installation</strong></h3>
-<p>Run the MySQL secure installation script to set a root password and improve security.</p>
+<h3><strong>Secure MariaDB</strong></h3>
+<p>Run the included security script to remove insecure default settings and ensure the installation is secure.</p>
 <pre><code>sudo mysql_secure_installation
 </code></pre>
 
-<p>Follow the prompts to set up the root password and secure MariaDB.</p>
-
-<h3><strong>Create Database and User for WordPress</strong></h3>
-<p>Log in to MySQL with the root account.</p>
+<h3><strong>Create a Database for WordPress</strong></h3>
+<p>Log in to the MariaDB shell and create a database and user for WordPress.</p>
 <pre><code>sudo mysql -u root -p
 </code></pre>
 
-<p>Enter the root password when prompted.</p>
-<p>Execute the following SQL commands to create a database and user for WordPress. Replace <code>wordpress</code>, <code>wordpressuser</code>, and <code>password</code> with your preferred database name, username, and password.</p>
+<p>Once logged in, run the following SQL commands:</p>
 <pre><code>CREATE DATABASE wordpress;
-CREATE USER 'wordpressuser'@'localhost' IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpressuser'@'localhost';
+CREATE USER 'wp_user'@'localhost' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON wordpress.* TO 'wp_user'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 </code></pre>
 
-<h2 id="setting-up-wordpress"><strong>Setting Up WordPress</strong></h2>
-<h3><strong>Installation</strong></h3>
-<p>Download and extract the latest WordPress package into your web directory.</p>
-<pre><code>cd /tmp
-wget https://wordpress.org/latest.tar.gz
-tar -zxvf latest.tar.gz
-sudo mv wordpress /var/www/html/
-</code></pre>
-
-<h3><strong>Set Permissions</strong></h3>
-<p>Adjust permissions for WordPress to function correctly. *We set the file permissions to 644, This is because we need the wordpress files to be readable by the web server.
-</p>
-<pre><code>sudo chown -R www-data:www-data /var/www/html/wordpress
-sudo chmod -R 755 /var/www/html/wordpress
-*sudo find /var/www/html/wordpress -type f -exec chmod 644 {} \;
-</code></pre>
-
-<h3><strong>Configuration</strong></h3>
-<p>Navigate to your WordPress directory and rename the sample configuration file.</p>
+<h2 id="configuring-wordpress"><strong>Configuring WordPress 🛠️</strong></h2>
+<h3><strong>Set Up WordPress</strong></h3>
+<ul>
+  <li>Navigate to your WordPress directory:</li>
+</ul>
 <pre><code>cd /var/www/html/wordpress
-cp wp-config-sample.php wp-config.php
-nano wp-config.php
 </code></pre>
 
-<p>Update the database details (<code>DB_NAME</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_HOST</code>) with the values you set in MariaDB.</p>
-<pre><code>define( 'DB_NAME', 'wordpress' );
-define( 'DB_USER', 'wordpressuser' );
-define( 'DB_PASSWORD', 'password' );
-define( 'DB_HOST', 'localhost' );
+<ul>
+  <li>Create a copy of the sample configuration file:</li>
+</ul>
+<pre><code>cp wp-config-sample.php wp-config.php
 </code></pre>
 
-<h3><strong>Complete WordPress Installation</strong></h3>
-<p>Open a web browser and navigate to your server's IP address or domain name. Follow the WordPress installation prompts to set up your site.</p>
+<ul>
+  <li>Edit the configuration file to add your database information:</li>
+</ul>
+<pre><code>sudo nano wp-config.php
+</code></pre>
+
+<ul>
+  <li>Update the following lines with your database details:</li>
+</ul>
+<pre><code>define('DB_NAME', 'wordpress');
+define('DB_USER', 'wp_user');
+define('DB_PASSWORD', 'password');
+define('DB_HOST', 'localhost');
+</code></pre>
 
 <h2 id="accessing-wordpress"><strong>Accessing WordPress 🌐</strong></h2>
-<h4><strong>Allocate and Associate an Elastic IP</strong></h4>
-<p>Allocate an Elastic IP address and associate it with your EC2 instance to provide a static public IP address.</p>
-<h4><strong>Update Security Group Rules</strong></h4>
-<p>Ensure that your security group allows HTTP (port 80) and SSH (port 22) traffic from the internet.</p>
-<h4><strong>Connect to WordPress</strong></h4>
-<p>Access your WordPress setup by navigating to the public IP address of your EC2 instance in a web browser. Complete the WordPress setup by providing database details.</p>
+<p>Open a web browser and navigate to your server's IP address to complete the WordPress setup through the web interface.</p>
 
-<h2 id="additional-resources"><strong>Additional Resources 📚</strong></h2>
-<ul>
-  <li><a href="https://www.terraform.io/docs">Terraform Documentation</a></li>
-  <li><a href="https://docs.aws.amazon.com">AWS Documentation</a></li>
-</ul>
+<h2 id="contributing"><strong>Contributing 🤝</strong></h2>
+<p>Contributions are welcome! Please feel free to submit a Pull Request.</p>
 
 <p align="center">
-  <a href="https://www.linkedin.com/in/mohammed-sayed-16112a179/" style="text-decoration:none; color:#0e76a8;">
-    <img src="https://cdn-icons-png.flaticon.com/512/174/174857.png" alt="LinkedIn" width="20" height="20"/> LinkedIn
-  </a> &nbsp;&middot;&nbsp;
-  <a href="https://github.com/Mo-ASayed" style="text-decoration:none; color:#333;">
-    <img src="https://cdn-icons-png.flaticon.com/512/733/733609.png" alt="GitHub" width="20" height="20"/> GitHub
-  </a> &nbsp;&middot;&nbsp;
-  <a href="https://medium.com/@sayedsylvainltd" style="text-decoration:none; color:#00ab6c;">
-    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111505.png" alt="Medium" width="20" height="20"/> Medium
-  </a>
+  <a href="https://medium.com/@sayedsylvainltd" target="_blank">Medium</a> |
+  <a href="https://www.linkedin.com/in/mohammed-sayed-16112a179/" target="_blank">LinkedIn</a> |
+  <a href="https://github.com/Mo-ASayed" target="_blank">GitHub</a>
 </p>
-
 </body>
 </html>
