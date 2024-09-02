@@ -1,8 +1,6 @@
 variable "aws_access_key" {}
 variable "aws_secret_key" {}
-variable "key_name" {
-  
-}
+variable "key_name" {}
 
 provider "aws" {
   region     = "us-east-1"
@@ -31,7 +29,7 @@ resource "aws_instance" "NGINX-EC2" {
   subnet_id     = aws_subnet.mo_nginx-ec2-subnet.id
   associate_public_ip_address = true
   vpc_security_group_ids = [aws_security_group.mo_nginx-ec2-security_group_allow_http.id]
-  key_name = var.key_name  # Reference to the key pair name
+  key_name = var.key_name  
   user_data = <<-EOF
     #!/bin/bash
     sudo apt-get update
